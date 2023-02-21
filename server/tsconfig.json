@@ -15,7 +15,9 @@
                 "node_modules/*",
                 "src/types/*"
             ]
-        }
+        },
+        "strict": true,
+        "forceConsistentCasingInFileNames": true
     },
     "exclude": [
         "node_modules",
