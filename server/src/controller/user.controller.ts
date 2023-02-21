@@ -76,10 +76,9 @@ export const ticketPostController = async (req: Request, res: Response) => {
     }
     return TicketsError
       ? res.status(400).json(TicketsError)
-      : res.status(200).json({ ticketId: Tickets[0]?.id });
+      : res.status(201).json({ ticketId: Tickets[0]?.id });
   } catch (error) {
-    console.log(error);
-    return res.status(500).json(error);
+    return res.status(500).json({ message: "Server Error" });
   }
 };
 
@@ -149,8 +148,79 @@ export const replyPostController = async (req: Request, res: Response) => {
     }
     return RepliesError
       ? res.status(403).json(RepliesError)
-      : res.status(200).json({ replyId: Replies[0]?.id });
+      : res.status(201).json({ replyId: Replies[0]?.id });
   } catch (error) {
-    return res.status(500).json(error);
+    return res.status(500).json({ message: "Server Error" });
+  }
+};
+
+export const getAllTicketController = async (req: Request, res: Response) => {
+  try {
+    const { data, error } = await supabase
+      .from("Tickets")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(10);
+
+    return error ? res.status(400).json(error) : res.status(200).json(data);
+  } catch (error) {
+    return res.status(500).json({ message: "Server Error" });
+  }
+};
+
+export const getAnUserTicketController = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const { id } = req.query;
+    const { data, error } = await supabase
+      .from("Tickets")
+      .select("*")
+      .eq("userId", id)
+      .order("created_at", { ascending: false })
+      .limit(10);
+
+    return error ? res.status(400).json(error) : res.status(200).json(data);
+  } catch (error) {
+    return res.status(500).json({ message: "Server Error" });
+  }
+};
+
+export const viewATicket = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.query;
+    const { data: TicketFiles, error: TicketFilesError } = await supabase
+      .from("File-ticket")
+      .select("fileId, Files(url)")
+      .eq("ticketId", id);
+
+    const { data: TicketReply, error: TicketReplyError } = await supabase
+      .from("Replies")
+      .select("*")
+      .eq("ticketId", id)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (TicketFilesError) return res.status(400).json(TicketReplyError);
+
+    let replyfiles = [];
+
+    if (Array.isArray(TicketReply) && TicketReply.length > 0) {
+      const { data, error } = await supabase
+        .from("File-reply")
+        .select("fileId, Files(url)")
+        .eq("replyId", TicketReply[0]?.id);
+      if (error) return res.status(400).json(error);
+
+      replyfiles.push(...data);
+    }
+    return TicketFilesError
+      ? res.status(400).json(TicketFilesError)
+      : res
+          .status(200)
+          .json({ TicketFiles, replies: { TicketReply, replyfiles } });
+  } catch (error) {
+    return res.status(500).json({ message: "Server Error" });
   }
 };
