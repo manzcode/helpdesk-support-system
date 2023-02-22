@@ -1,11 +1,21 @@
 import { Router } from "express";
 import {
+  getAllTicketController,
+  getAnUserTicketController,
   replyPostController,
   ticketPostController,
+  viewATicket,
 } from "../controller/user.controller";
 import { middlewareMulter } from "../middleware/multer";
 
 const router: Router = Router();
+
+//get all tickets
+router.get("/all/tickets", getAllTicketController);
+
+router.get("/a/ticket", getAnUserTicketController);
+
+router.get("/show/ticket", viewATicket);
 
 //post a ticket
 router.post(
