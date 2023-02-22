@@ -1,7 +1,7 @@
-import multer, { Multer } from "multer";
+import multer from "multer";
 import path from "path";
 
-export function middlewareMulter(arr: string[]): Multer {
+export function middlewareMulter(arr: string[]) {
   return multer({
     storage: multer.diskStorage({}),
     limits: {
