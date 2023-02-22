@@ -1,169 +1,148 @@
 import { Request, Response } from "express";
 import cldInstance from "../config/cloudinary";
-import { supabase } from "../config/supabase";
+import { PrismaClient } from "@prisma/client";
 
+const prisma = new PrismaClient();
 interface FilesId {
-  id: number;
+  id: string;
   cldfileId: string;
 }
 
 export const ticketPostController = async (req: Request, res: Response) => {
+  const { id } = req.query;
+  const files = req.files;
+  const {
+    subject,
+    description,
+    priority,
+    status,
+    assignation,
+    date_limit,
+  } = req.body;
+  const filesId: FilesId[] = [];
   try {
-    const { id } = req.query;
-    const files = req.files;
-    const { description, priority, status, assignation, date_limit } = req.body;
-    const filesId: FilesId[] = [];
-    for (const file of files as Express.Multer.File[]) {
-      const result = await cldInstance.uploader.upload(file.path);
-      const { data, error } = await supabase
-        .from("Files")
-        .insert({
-          url: result.secure_url,
-          userId: id,
-        })
-        .select("id");
-      if (Array.isArray(data) && data.length > 0) {
-        filesId.push({ id: data[0]?.id, cldfileId: result.public_id });
-      }
-      if (error) {
-        for (const newfile of filesId) {
-          await cldInstance.uploader.destroy(newfile.cldfileId);
-          await supabase
-            .from("Files")
-            .delete()
-            .eq("id", newfile.id);
-        }
-        return res.status(400).json(error);
-      }
-    }
-
-    const { data: Tickets, error: TicketsError } = await supabase
-      .from("Tickets")
-      .insert({
+    // Insert ticket data into Supabase
+    const prismaQueryTicket = await prisma.ticket.create({
+      data: {
+        subject,
         description,
         date_limit,
         status,
         priority,
-        assignation,
-        userId: id,
-      })
-      .select("id");
-
-    if (Array.isArray(Tickets) && Tickets.length < 1)
-      return res.status(400).json({ message: "failed to save the ticket." });
-
-    if (Array.isArray(Tickets) && Tickets.length > 0) {
-      for (let i = 0; i < filesId.length; i++) {
-        const { error } = await supabase.from("File-ticket").insert({
-          ticketId: Tickets[0]?.id,
-          fileId: filesId[i]?.id,
+        assigned: assignation,
+        userId: id as string,
+      },
+      select: {
+        id: true,
+      },
+    });
+    // Upload files to Cloudinary and insert file data into Supabase in parallel using Promise.all
+    const fileUploadPromises = (files as Express.Multer.File[]).map(
+      async (file) => {
+        const result = await cldInstance.uploader.upload(file.path);
+        const prismaQueryFile = await prisma.files.create({
+          data: {
+            url: result.secure_url,
+            userId: id as string,
+            tickets: { connect: { id: prismaQueryTicket?.id } },
+          },
+          select: {
+            id: true,
+          },
         });
-        if (error) {
-          for (const newfile of filesId) {
-            await cldInstance.uploader.destroy(newfile.cldfileId);
-            await supabase
-              .from("Files")
-              .delete()
-              .eq("id", newfile.id);
-            await supabase
-              .from("File-ticket")
-              .delete()
-              .eq("fileId", newfile.id);
-          }
-          return res.status(400).json(error);
-        }
+        filesId.push({
+          id: prismaQueryFile?.id,
+          cldfileId: result.public_id,
+        });
       }
-    }
-    return TicketsError
-      ? res.status(400).json(TicketsError)
-      : res.status(201).json({ ticketId: Tickets[0]?.id });
+    );
+    await Promise.all(fileUploadPromises);
+
+    await prisma.$disconnect();
+    return res.status(201).json({ ticketId: prismaQueryTicket?.id });
   } catch (error) {
+    // Delete uploaded files and their corresponding data in Supabase if an error occurs
+    const fileDeletePromises = filesId.map(async (file) => {
+      await cldInstance.uploader.destroy(file.cldfileId);
+      await prisma.files.delete({
+        where: {
+          id: file?.id,
+        },
+      });
+    });
+    await Promise.all(fileDeletePromises);
+    await prisma.$disconnect();
     return res.status(500).json({ message: "Server Error" });
   }
 };
 
 export const replyPostController = async (req: Request, res: Response) => {
+  const { id } = req.query;
+  const files = req.files;
+  const { content, ticketId } = req.body;
+  const filesId: FilesId[] = [];
   try {
-    const { id } = req.query;
-    const files = req.files;
-    const { content, ticketId } = req.body;
-    const filesId: FilesId[] = [];
-    for (const file of files as Express.Multer.File[]) {
-      const result = await cldInstance.uploader.upload(file.path);
-      const { data, error } = await supabase
-        .from("Files")
-        .insert({
-          url: result.secure_url,
-          userId: id,
-        })
-        .select("id");
-      if (Array.isArray(data) && data.length > 0) {
-        filesId.push({ id: data[0]?.id, cldfileId: result.public_id });
-      }
-      if (error) {
-        for (const newfile of filesId) {
-          await cldInstance.uploader.destroy(newfile.cldfileId);
-          await supabase
-            .from("Files")
-            .delete()
-            .eq("id", newfile.id);
-        }
-        return res.status(400).json(error);
-      }
-    }
-
-    const { data: Replies, error: RepliesError } = await supabase
-      .from("Replies")
-      .insert({
+    // Insert reply data into Supabase
+    const prismaQueryReplies = await prisma.replies.create({
+      data: {
         content,
-        ticketId,
-        replier: id,
-      })
-      .select("id");
+        assigned: id as string,
+        ticketId: ticketId,
+      },
+      select: {
+        id: true,
+      },
+    });
 
-    if (Array.isArray(Replies) && Replies.length < 1)
-      return res.status(400).json({ message: "failed to save the ticket." });
-
-    if (Array.isArray(Replies) && Replies.length > 0) {
-      for (let i = 0; i < filesId.length; i++) {
-        const { error } = await supabase.from("File-reply").insert({
-          replyId: Replies[0]?.id,
-          fileId: filesId[i]?.id,
+    // Upload files to Cloudinary and insert file data into Supabase in parallel using Promise.all
+    const fileUploadPromises = (files as Express.Multer.File[]).map(
+      async (file) => {
+        const result = await cldInstance.uploader.upload(file.path);
+        const prismaQueryFile = await prisma.files.create({
+          data: {
+            url: result.secure_url,
+            userId: id as string,
+            replies: { connect: { id: prismaQueryReplies.id } },
+          },
+          select: {
+            id: true,
+          },
         });
-        if (error) {
-          for (const newfile of filesId) {
-            await cldInstance.uploader.destroy(newfile.cldfileId);
-            await supabase
-              .from("Files")
-              .delete()
-              .eq("id", newfile.id);
-            await supabase
-              .from("File-ticket")
-              .delete()
-              .eq("fileId", newfile.id);
-          }
-          return res.status(400).json(error);
-        }
+        filesId.push({
+          id: prismaQueryFile?.id,
+          cldfileId: result.public_id,
+        });
       }
-    }
-    return RepliesError
-      ? res.status(403).json(RepliesError)
-      : res.status(201).json({ replyId: Replies[0]?.id });
+    );
+    await Promise.all(fileUploadPromises);
+    await prisma.$disconnect();
+    return res.status(201).json({ replyId: prismaQueryReplies?.id });
   } catch (error) {
+    // Delete uploaded files and their corresponding data in Supabase if an error occurs
+    const fileDeletePromises = filesId.map(async (file) => {
+      await cldInstance.uploader.destroy(file.cldfileId);
+      await prisma.files.delete({
+        where: {
+          id: file?.id,
+        },
+      });
+    });
+    await Promise.all(fileDeletePromises);
+    await prisma.$disconnect();
     return res.status(500).json({ message: "Server Error" });
   }
 };
 
 export const getAllTicketController = async (req: Request, res: Response) => {
   try {
-    const { data, error } = await supabase
-      .from("Tickets")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(10);
-
-    return error ? res.status(400).json(error) : res.status(200).json(data);
+    const tickets = await prisma.ticket.findMany({
+      orderBy: { created_at: "desc" },
+      take: 10,
+    });
+    await prisma.$disconnect();
+    return res.status(200).json(tickets);
   } catch (error) {
+    await prisma.$disconnect();
     return res.status(500).json({ message: "Server Error" });
   }
 };
@@ -172,17 +151,17 @@ export const getAnUserTicketController = async (
   req: Request,
   res: Response
 ) => {
+  const { id } = req.query;
   try {
-    const { id } = req.query;
-    const { data, error } = await supabase
-      .from("Tickets")
-      .select("*")
-      .eq("userId", id)
-      .order("created_at", { ascending: false })
-      .limit(10);
-
-    return error ? res.status(400).json(error) : res.status(200).json(data);
+    const tickets = await prisma.ticket.findMany({
+      where: { assigned: id as string },
+      orderBy: { created_at: "desc" },
+      take: 10,
+    });
+    await prisma.$disconnect();
+    return res.status(200).json(tickets);
   } catch (error) {
+    await prisma.$disconnect();
     return res.status(500).json({ message: "Server Error" });
   }
 };
@@ -190,37 +169,28 @@ export const getAnUserTicketController = async (
 export const viewATicket = async (req: Request, res: Response) => {
   try {
     const { id } = req.query;
-    const { data: TicketFiles, error: TicketFilesError } = await supabase
-      .from("File-ticket")
-      .select("fileId, Files(url)")
-      .eq("ticketId", id);
 
-    const { data: TicketReply, error: TicketReplyError } = await supabase
-      .from("Replies")
-      .select("*")
-      .eq("ticketId", id)
-      .order("created_at", { ascending: false })
-      .limit(1);
+    const ticketFiles = await prisma.ticket.findUnique({
+      where: { id: id as string },
+      include: {
+        files: true,
+      },
+    });
 
-    if (TicketFilesError) return res.status(400).json(TicketReplyError);
-
-    let replyfiles = [];
-
-    if (Array.isArray(TicketReply) && TicketReply.length > 0) {
-      const { data, error } = await supabase
-        .from("File-reply")
-        .select("fileId, Files(url)")
-        .eq("replyId", TicketReply[0]?.id);
-      if (error) return res.status(400).json(error);
-
-      replyfiles.push(...data);
-    }
-    return TicketFilesError
-      ? res.status(400).json(TicketFilesError)
-      : res
-          .status(200)
-          .json({ TicketFiles, replies: { TicketReply, replyfiles } });
+    const ticketReply = await prisma.replies.findFirst({
+      where: { ticketId: id as string },
+      include: {
+        files: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    await prisma.$disconnect();
+    return res.status(200).json({
+      ticketFiles,
+      ticketReply,
+    });
   } catch (error) {
+    await prisma.$disconnect();
     return res.status(500).json({ message: "Server Error" });
   }
 };

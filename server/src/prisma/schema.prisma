@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String    @id @default(uuid())
+  username String
+  email    String    @unique
+  password String
+  role     String
+  files    Files[]
+  Replies  Replies[]
+  tickets  Ticket[]
+}
+
+model Ticket {
+  id          String    @id @default(uuid())
+  description String
+  priority    String
+  status      String
+  subject     String
+  date_limit  DateTime
+  created_at  DateTime  @default(now())
+  assigned    String?
+  userId      String
+  replies     Replies[]
+  user        User      @relation(fields: [userId], references: [id])
+  files       Files[]   @relation("TicketFiles")
+
+  @@index([userId], map: "Ticket_userId_fkey")
+}
+
+model Files {
+  id      String    @id @default(uuid())
+  url     String
+  userId  String
+  user    User      @relation(fields: [userId], references: [id])
+  replies Replies[] @relation("ReplyFiles")
+  tickets Ticket[]  @relation("TicketFiles")
+
+  @@index([userId], map: "Files_userId_fkey")
+}
+
+model Replies {
+  id          String   @id @default(uuid())
+  content     String
+  assigned    String?
+  createdAt   DateTime @default(now())
+  ticketId    String
+  assignation User?    @relation(fields: [assigned], references: [id])
+  Ticket      Ticket   @relation(fields: [ticketId], references: [id])
+  files       Files[]  @relation("ReplyFiles")
+
+  @@index([assigned], map: "Replies_assigned_fkey")
+  @@index([ticketId], map: "Replies_ticketId_fkey")
+}
