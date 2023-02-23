@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import cldInstance from "../config/cloudinary";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Prisma } from "@prisma/client";
 
 const prisma = new PrismaClient();
 interface FilesId {
@@ -58,7 +58,6 @@ export const ticketPostController = async (req: Request, res: Response) => {
     );
     await Promise.all(fileUploadPromises);
 
-    await prisma.$disconnect();
     return res.status(201).json({ ticketId: prismaQueryTicket?.id });
   } catch (error) {
     // Delete uploaded files and their corresponding data in Supabase if an error occurs
@@ -71,7 +70,7 @@ export const ticketPostController = async (req: Request, res: Response) => {
       });
     });
     await Promise.all(fileDeletePromises);
-    await prisma.$disconnect();
+    console.log(error);
     return res.status(500).json({ message: "Server Error" });
   }
 };
@@ -89,8 +88,9 @@ export const replyPostController = async (req: Request, res: Response) => {
         assigned: id as string,
         ticketId: ticketId,
       },
-      select: {
-        id: true,
+      include: {
+        files: true,
+        assignation: true,
       },
     });
 
@@ -115,8 +115,7 @@ export const replyPostController = async (req: Request, res: Response) => {
       }
     );
     await Promise.all(fileUploadPromises);
-    await prisma.$disconnect();
-    return res.status(201).json({ replyId: prismaQueryReplies?.id });
+    return res.status(201).json(prismaQueryReplies);
   } catch (error) {
     // Delete uploaded files and their corresponding data in Supabase if an error occurs
     const fileDeletePromises = filesId.map(async (file) => {
@@ -128,7 +127,7 @@ export const replyPostController = async (req: Request, res: Response) => {
       });
     });
     await Promise.all(fileDeletePromises);
-    await prisma.$disconnect();
+    console.log(error);
     return res.status(500).json({ message: "Server Error" });
   }
 };
@@ -137,12 +136,13 @@ export const getAllTicketController = async (req: Request, res: Response) => {
   try {
     const tickets = await prisma.ticket.findMany({
       orderBy: { created_at: "desc" },
+      include: {
+        user: true,
+      },
       take: 10,
     });
-    await prisma.$disconnect();
     return res.status(200).json(tickets);
   } catch (error) {
-    await prisma.$disconnect();
     return res.status(500).json({ message: "Server Error" });
   }
 };
@@ -154,14 +154,32 @@ export const getAnUserTicketController = async (
   const { id } = req.query;
   try {
     const tickets = await prisma.ticket.findMany({
-      where: { assigned: id as string },
+      where: { userId: id as string },
       orderBy: { created_at: "desc" },
       take: 10,
     });
-    await prisma.$disconnect();
     return res.status(200).json(tickets);
   } catch (error) {
-    await prisma.$disconnect();
+    return res.status(500).json({ message: "Server Error" });
+  }
+};
+
+export const closeticket = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.query;
+    await prisma.ticket.update({
+      where: {
+        id: id as string,
+      },
+      data: {
+        status: "closed",
+      },
+      select: {
+        id: true,
+      },
+    });
+    return res.status(200).json({ message: "Ticket closed" });
+  } catch (error) {
     return res.status(500).json({ message: "Server Error" });
   }
 };
@@ -174,23 +192,24 @@ export const viewATicket = async (req: Request, res: Response) => {
       where: { id: id as string },
       include: {
         files: true,
+        user: true,
       },
     });
 
-    const ticketReply = await prisma.replies.findFirst({
+    const ticketReply = await prisma.replies.findMany({
       where: { ticketId: id as string },
       include: {
         files: true,
+        assignation: true,
       },
       orderBy: { createdAt: "desc" },
+      take: 10,
     });
-    await prisma.$disconnect();
     return res.status(200).json({
       ticketFiles,
       ticketReply,
     });
   } catch (error) {
-    await prisma.$disconnect();
     return res.status(500).json({ message: "Server Error" });
   }
 };

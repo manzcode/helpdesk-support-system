@@ -1,52 +1,32 @@
 import React, { useState, useEffect } from "react";
 import { Table } from "react-bootstrap";
-
-interface ListTicket {
-  id: number;
-  name: string;
-  email: string;
-  subject: string;
-  status: string;
-  priority: string;
-  date_limit: string;
-}
+import { useUser } from "../context/UserContext";
+import { getAllTicket, getaticket } from "../api";
+import { useNavigate } from "react-router-dom";
 
 const SupportTicketList = () => {
-  const [tickets, setTickets] = useState<ListTicket[]>([]);
+  const [tickets, setTickets] = useState<any[]>([]);
+  const { user } = useUser();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Ajouter ici le code pour récupérer la liste des tickets depuis le serveur
-    const fetchedTickets = [
-      {
-        id: 1,
-        name: "John Doe",
-        email: "john@example.com",
-        subject: "Problème avec le site",
-        status: "En cours",
-        priority: "moyen",
-        date_limit: "12-03-23",
-      },
-      {
-        id: 2,
-        name: "Jane Smith",
-        email: "jane@example.com",
-        subject: "Demande de renseignements",
-        status: "Résolu",
-        priority: "moyen",
-        date_limit: "12-03-23",
-      },
-      {
-        id: 3,
-        name: "Bob Johnson",
-        email: "bob@example.com",
-        subject: "Erreur lors de la commande",
-        status: "En cours",
-        priority: "moyen",
-        date_limit: "12-03-23",
-      },
-    ];
-    setTickets(fetchedTickets);
-  }, []);
+    const fetchTickets = async () => {
+      try {
+        let getUserTicket;
+        if (user?.role === "admin") {
+          getUserTicket = await getAllTicket();
+        } else {
+          getUserTicket = await getaticket(user?.id as string);
+        }
+
+        setTickets(getUserTicket?.data || []);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchTickets();
+  }, [user]);
 
   return (
     <div>
@@ -54,9 +34,13 @@ const SupportTicketList = () => {
       <Table striped bordered hover>
         <thead>
           <tr>
-            <th>#</th>
-            <th>Nom</th>
-            <th>Email</th>
+            <th>ID</th>
+            {user?.role === "user" ? null : (
+              <>
+                <th>Nom</th>
+                <th>Email</th>
+              </>
+            )}
             <th>Sujet</th>
             <th>Statut</th>
             <th>priority</th>
@@ -65,14 +49,23 @@ const SupportTicketList = () => {
         </thead>
         <tbody>
           {tickets.map((ticket) => (
-            <tr key={ticket.id}>
+            <tr
+              key={ticket.id}
+              onClick={() => {
+                navigate(`/ticket/${ticket.id}`);
+              }}
+            >
               <td>{ticket.id}</td>
-              <td>{ticket.name}</td>
-              <td>{ticket.email}</td>
+              {user?.role === "user" ? null : (
+                <>
+                  <td>{ticket.user.username}</td>
+                  <td>{ticket.user.email}</td>
+                </>
+              )}
               <td>{ticket.subject}</td>
               <td>{ticket.status}</td>
               <td>{ticket.priority}</td>
-              <td>{ticket.date_limit}</td>
+              <td>{new Date(ticket.date_limit).toLocaleDateString()}</td>
             </tr>
           ))}
         </tbody>

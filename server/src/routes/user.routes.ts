@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  closeticket,
   getAllTicketController,
   getAnUserTicketController,
   replyPostController,
@@ -10,6 +11,8 @@ import { middlewareMulter } from "../middleware/multer";
 
 const router: Router = Router();
 
+//close ticket
+router.get("/close/ticket", closeticket);
 //get all tickets
 router.get("/all/tickets", getAllTicketController);
 

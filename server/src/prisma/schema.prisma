@@ -24,7 +24,7 @@ model Ticket {
   priority    String
   status      String
   subject     String
-  date_limit  DateTime
+  date_limit  String
   created_at  DateTime  @default(now())
   assigned    String?
   userId      String
@@ -49,10 +49,10 @@ model Files {
 model Replies {
   id          String   @id @default(uuid())
   content     String
-  assigned    String?
+  assigned    String
   createdAt   DateTime @default(now())
   ticketId    String
-  assignation User?    @relation(fields: [assigned], references: [id])
+  assignation User     @relation(fields: [assigned], references: [id])
   Ticket      Ticket   @relation(fields: [ticketId], references: [id])
   files       Files[]  @relation("ReplyFiles")
 
