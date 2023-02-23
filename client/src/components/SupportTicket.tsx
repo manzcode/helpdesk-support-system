@@ -6,6 +6,9 @@ import React, {
   useState,
 } from "react";
 import { Form, Button, Modal, ListGroup } from "react-bootstrap";
+import { useUser } from "../context/UserContext";
+import { postticket } from "../api";
+import { ModalCustom } from "./ModalCustom";
 
 const SupportTicket = () => {
   const [showModal, setShowModal] = useState(false);
@@ -13,31 +16,18 @@ const SupportTicket = () => {
   const [dueDate, setDueDate] = useState("");
   const [priority, setPriority] = useState<"low" | "medium" | "high">("medium");
   const [status, setStatus] = useState<"open" | "closed">("open");
-  const [ticket, setTicket] = useState({
-    name: "",
-    email: "",
-    subject: "",
-    message: "",
-  });
+  const [subject, setSubject] = useState("");
   const [attachments, setAttachments] = useState<any[]>([]);
+  const { user } = useUser();
+  const [error, setError] = useState(false);
 
   const handleFileInputChange: ChangeEventHandler<HTMLInputElement> = (
     event
   ) => {
     const selectedFiles = event.target.files;
-    const filesArray = [];
-
     if (selectedFiles) {
-      for (let i = 0; i < selectedFiles.length && i < 10; i++) {
-        filesArray.push(selectedFiles[i]);
-      }
-
-      setAttachments(filesArray);
+      setAttachments((p) => [...p, ...selectedFiles]);
     }
-  };
-
-  const handleInputChange: ChangeEventHandler<HTMLInputElement> = (event) => {
-    setTicket({ ...ticket, [event.target.name]: event.target.value });
   };
 
   const handleRemoveAttachment = (index: number) => {
@@ -46,24 +36,44 @@ const SupportTicket = () => {
     setAttachments(updatedAttachments);
   };
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    // Ajouter ici le code pour envoyer le ticket au serveur
-    setShowModal(true);
+    const formData = new FormData();
+    attachments.forEach((attachment) => {
+      formData.append("files", attachment);
+    });
+    formData.append("subject", subject);
+    formData.append("priority", priority);
+    formData.append("date_limit", dueDate);
+    formData.append("status", status);
+    formData.append("description", description);
+
+    try {
+      const sendTicket = await postticket(user?.id as string, formData);
+      // Ajouter ici le code pour envoyer le ticket au serveur
+      setShowModal(true);
+      if (!sendTicket.data) {
+        setError(true);
+      }
+    } catch (error) {
+      setShowModal(true);
+      setError(true);
+    }
   };
 
   const handleCloseModal = () => {
     setShowModal(false);
-    setTicket({
-      name: "",
-      email: "",
-      subject: "",
-      message: "",
-    });
+    setSubject("");
+    setDescription("");
+    setDueDate("");
+    setPriority("medium");
+    setStatus("open");
+    setError(false);
+    setAttachments([]);
   };
 
   return (
-    <div>
+    <div className="col-6 mx-auto">
       <h2>Créer un ticket de support</h2>
       <Form onSubmit={handleSubmit}>
         <Form.Group controlId="subject">
@@ -71,8 +81,8 @@ const SupportTicket = () => {
           <Form.Control
             type="text"
             name="subject"
-            value={ticket.subject}
-            onChange={handleInputChange}
+            value={subject}
+            onChange={(event) => setSubject(event.target.value)}
             required
           />
         </Form.Group>
@@ -81,6 +91,7 @@ const SupportTicket = () => {
           <Form.Label>Date limite</Form.Label>
           <Form.Control
             type="date"
+            name="date-limit"
             value={dueDate}
             onChange={(event) => setDueDate(event.target.value)}
             required
@@ -91,6 +102,7 @@ const SupportTicket = () => {
           <Form.Label>Priorité</Form.Label>
           <Form.Control
             as="select"
+            name="priority"
             value={priority}
             onChange={(event) =>
               setPriority(event.target.value as "low" | "medium" | "high")
@@ -107,6 +119,7 @@ const SupportTicket = () => {
           <Form.Control
             as="select"
             value={status}
+            name="status"
             onChange={(event) =>
               setStatus(event.target.value as "open" | "closed")
             }
@@ -121,6 +134,7 @@ const SupportTicket = () => {
           <Form.Control
             as="textarea"
             rows={5}
+            name="description"
             value={description}
             onChange={(event) => setDescription(event.target.value)}
             required
@@ -152,19 +166,15 @@ const SupportTicket = () => {
         </Button>
       </Form>
 
-      <Modal show={showModal} onHide={handleCloseModal}>
-        <Modal.Header closeButton>
-          <Modal.Title>Merci!</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          Votre ticket a été soumis avec succès. Nous vous contacterons bientôt.
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="primary" onClick={handleCloseModal}>
-            Fermer
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      <ModalCustom
+        showModal={showModal}
+        handleCloseModal={handleCloseModal}
+        titre={error ? "failed" : "success"}
+      >
+        {error
+          ? "désolé une erreur du serveur. réessayer plus tard."
+          : "Votre ticket a été soumis avec succès. Nous vous contacterons bientôt."}
+      </ModalCustom>
     </div>
   );
 };
