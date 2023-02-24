@@ -1,20 +1,24 @@
-<h2>Helpdesk Support Ticket Application</h2>
+<h1>Helpdesk Support Ticket Application</h1>
 
 <div>This is a web application built using React TypeScript with ViteJS, Axios, React Router DOM, and Bootstrap, which is connected to a Node.js TypeScript Express.js API using Prisma. The application is designed to be a basic helpdesk support system.</div>
 
-## Functionality
+
+
+<h2>Functionality</h2>
+
+
 The following are the functionalities available in the application:
 
-### User Role
+<h4>User Role</h4>
 
 - User can create a support ticket
 - User can list own support tickets
 - User can view support ticket
 - User can add replies to support ticket
 - User can upload documents and images to replies
-- User can close support ticket
+- User can close support ticket.
 
-### Admin Role
+<h4> Admin Role </h4>
 
 - Admin can list all support tickets
 - Admin can view support ticket
@@ -57,7 +61,9 @@ Prisma</a></li>
   </ul>
 </details>
 
-### Setup
+<h2>Setup</h2>
+
+
 Clone the repository
 
 ```bash
@@ -86,7 +92,3 @@ Go to the server directory
 
 License
 This project is licensed under the MIT license.
-
-```
-
-```
