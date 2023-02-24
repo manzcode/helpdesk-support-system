@@ -53,9 +53,7 @@ function App() {
 
   return (
     <Router>
-      <CustomNavbar>
-        <span className="mx-3 fw-bold">{user?.username}</span>
-      </CustomNavbar>
+      <CustomNavbar />
       <Container className="h-100">
         <Routes>
           <Route

@@ -9,17 +9,17 @@ export default function CustomNavbar({
   children?: React.ReactNode;
 }) {
   const { authenticated, setAuthenticated } = useAuth();
-  const { setUser } = useUser();
+  const { user, setUser } = useUser();
   const navigate = useNavigate();
   return (
     <Navbar bg="light" className="mb-2">
       <Container>
-        <Navbar.Brand>Brand text</Navbar.Brand>
+        <Navbar.Brand>Help</Navbar.Brand>
       </Container>
       {children}
       {authenticated ? (
         <>
-          {" "}
+          <span className="mx-3 fw-bold">{user?.username}</span>{" "}
           <Button
             className="me-2"
             onClick={() => {
