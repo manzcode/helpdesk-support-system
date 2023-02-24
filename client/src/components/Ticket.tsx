@@ -314,7 +314,9 @@ const Ticket = () => {
 
       <ModalCustom
         showModal={confirm}
-        handleCloseModal={changeStatus}
+        handleClose={handleCloseModal}
+        handleConfirm={changeStatus}
+        confirm={true}
         titre="confirmé la fermeture du ticket"
       >
         vouler vous vraiment fermé le ricket
@@ -322,7 +324,8 @@ const Ticket = () => {
 
       <ModalCustom
         showModal={showModal}
-        handleCloseModal={handleCloseModal}
+        confirm={false}
+        handleClose={handleCloseModal}
         titre={error ? "failed" : "success"}
       >
         {error

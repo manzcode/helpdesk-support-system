@@ -168,7 +168,7 @@ const SupportTicket = () => {
 
       <ModalCustom
         showModal={showModal}
-        handleCloseModal={handleCloseModal}
+        handleClose={handleCloseModal}
         titre={error ? "failed" : "success"}
       >
         {error
