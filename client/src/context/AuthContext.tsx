@@ -29,6 +29,7 @@ export const jwtFuncDecode: () =>
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [authenticated, setAuthenticated] = useState(false);
+
   useEffect(() => {
     const decode = jwtFuncDecode();
     if (decode) {

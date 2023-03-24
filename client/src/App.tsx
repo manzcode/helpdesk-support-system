@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import SupportTicket from "./components/SupportTicket";
 import SupportTicketList from "./components/ListTicket";
-import { Button, Container } from "react-bootstrap";
+import { Container } from "react-bootstrap";
 import Ticket from "./components/Ticket";
 import CustomNavbar from "./components/NavBar";
 import {
@@ -31,25 +31,24 @@ const ProtectedRoutes = ({
 };
 
 function App() {
-  const { authenticated, setAuthenticated } = useAuth();
-  const { user, setUser } = useUser();
+  const { authenticated } = useAuth();
+  const { setUser } = useUser();
   const decode = jwtFuncDecode();
-
+  const getuser = async (userId: string) => {
+    try {
+      const aUser = await getUser(userId);
+      const res = aUser.data;
+      setUser(res);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  };
   useEffect(() => {
-    const getuser = async (userId: string) => {
-      try {
-        const Auser = await getUser(userId);
-        const res = Auser.data;
-        setUser(res);
-        return true;
-      } catch (error) {
-        return false;
-      }
-    };
-    if (authenticated && typeof decode !== "boolean") {
+    if (typeof decode !== "boolean") {
       getuser(decode?.id);
     }
-  }, [authenticated, decode]);
+  }, [authenticated]);
 
   return (
     <Router>

@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -31,8 +31,6 @@ model Ticket {
   replies     Replies[]
   user        User      @relation(fields: [userId], references: [id])
   files       Files[]   @relation("TicketFiles")
-
-  @@index([userId], map: "Ticket_userId_fkey")
 }
 
 model Files {
@@ -42,8 +40,6 @@ model Files {
   user    User      @relation(fields: [userId], references: [id])
   replies Replies[] @relation("ReplyFiles")
   tickets Ticket[]  @relation("TicketFiles")
-
-  @@index([userId], map: "Files_userId_fkey")
 }
 
 model Replies {
@@ -55,7 +51,4 @@ model Replies {
   assignation User     @relation(fields: [assigned], references: [id])
   Ticket      Ticket   @relation(fields: [ticketId], references: [id])
   files       Files[]  @relation("ReplyFiles")
-
-  @@index([assigned], map: "Replies_assigned_fkey")
-  @@index([ticketId], map: "Replies_ticketId_fkey")
 }

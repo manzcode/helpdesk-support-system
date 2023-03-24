@@ -1,0 +1,16 @@
+version: '3.3'
+services:
+  db:
+    image: postgres:13
+    container_name: postgresql_db
+    restart: always
+    environment:
+      POSTGRES_USER: mariomans
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: helpdeskdb
+    ports:
+      - "5433:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+volumes:
+  db_data:
