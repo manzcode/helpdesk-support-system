@@ -2,10 +2,17 @@
 
 <div>This is a web application built using React TypeScript with ViteJS, Axios, React Router DOM, and Bootstrap, which is connected to a Node.js TypeScript Express.js API using Prisma. The application is designed to be a basic helpdesk support system.</div>
 
+</br>
+<a href="https://helpdesk-ticket.onrender.com/">help desk </a>
+</br>
 
+![Capture d’écran de 2023-03-25 22-53-39](https://user-images.githubusercontent.com/47226716/227738806-feb81bd9-9f1b-4497-847e-a56a77e20df1.png)
+
+![Capture d’écran de 2023-03-25 22-53-29](https://user-images.githubusercontent.com/47226716/227738817-4fe89a69-ba61-462c-876c-729d06838b6b.png)
+
+![Capture d’écran de 2023-03-25 22-53-12](https://user-images.githubusercontent.com/47226716/227738827-92252255-d328-4511-9117-b8e196bfcf59.png)
 
 <h2>Functionality</h2>
-
 
 The following are the functionalities available in the application:
 
@@ -57,7 +64,7 @@ Bootstrap</a></li>
   <ul>
      <li><a href="https://www.prisma.io/">
 Prisma</a></li>
-    <li><a href="https://www.mysql.com/">Mysql</a></li>
+    <li><a href="https://www.postgresql.org/">Postgresql</a></li>
   </ul>
 </details>
 
@@ -83,6 +90,8 @@ Go to the server directory
 ```bash
   cd server
   npm install
+  docker-compose up -d 
+  npx prisma migrate deploy
   npm start
 ```
 
