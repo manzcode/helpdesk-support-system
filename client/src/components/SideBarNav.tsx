@@ -1,5 +1,5 @@
 import { FunctionComponent, PropsWithChildren } from "react";
-import { Dropdown, Nav, Navbar } from "react-bootstrap";
+import { Dropdown, Nav, Navbar, Image } from "react-bootstrap";
 import Footer from "./Footer";
 import { IoChatbubblesOutline } from "react-icons/io5";
 import { RiUser6Line } from "react-icons/ri";
@@ -8,6 +8,7 @@ import { HiChevronLeft, HiOutlineTicket, HiViewGridAdd } from "react-icons/hi";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../context/UserContext";
 import { useAuth } from "../context/AuthContext";
+import logo from "../assets/images/HelpDesk.svg";
 
 const SideBarNav: FunctionComponent<PropsWithChildren<{
   handleClick?: () => void;
@@ -29,7 +30,10 @@ const SideBarNav: FunctionComponent<PropsWithChildren<{
       <div>
         <div className="d-flex justify-content-between border-bottom border-2">
           <Navbar>
-            <Navbar.Brand>HelpDesk</Navbar.Brand>
+            <Navbar.Brand>
+              <Image src={logo} alt="..." height={50} width={50} />
+              HelpDesk
+            </Navbar.Brand>
           </Navbar>
           <span className="d-flex d-md-none align-items-center">
             <HiChevronLeft size={25} color="#4f35d8" onClick={handleClick} />

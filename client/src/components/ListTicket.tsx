@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
-import { Alert, Button, Col, Container, Row } from "react-bootstrap";
+import { Alert, Button, Col, Container, Image, Row } from "react-bootstrap";
 import { useUser } from "../context/UserContext";
 import { getAllTicket, getaticket } from "../api";
 import Single from "./Single";
 import moment from "moment";
-import { HiChevronRight } from "react-icons/hi";
 import SideBarNav from "./SideBarNav";
 import NewTicketsModal from "./NewTicketsModal";
 import { useTickets } from "../context/TicketsContext";
+import logo from "../assets/images/HelpDesk.svg";
+import { HiChevronRight } from "react-icons/hi";
 
 export type Ticket = {
   id: string;
@@ -79,13 +80,15 @@ const SupportTicketList = () => {
           <>
             <Row className="my-2">
               <Col className="d-flex align-items-center">
-                <span>
-                  <HiChevronRight
-                    className="d-md-none d-flex"
-                    size={25}
-                    color="#4f35d8"
+                <span className="d-md-none">
+                  <Image
+                    src={logo}
+                    alt="..."
                     onClick={showSideBar}
+                    height={50}
+                    width={50}
                   />
+                  <HiChevronRight size={25} color="#4f35d8" />
                 </span>
                 <h1 className="m-0">Tickets</h1>
               </Col>
