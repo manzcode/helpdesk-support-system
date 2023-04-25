@@ -18,8 +18,24 @@ export const getaticket = (userId: string) =>
 export const showAticket = (ticketId: string) =>
   axios.get(`/user/show/ticket?id=${ticketId}`);
 
+export const showReplies = (ticketId: string) =>
+  axios.get(`/user/a/reply?ticketid=${ticketId}`);
+
 export const postticket = (userId: string, formeData: any) =>
   axios.post(`/user/ticket?id=${userId}`, formeData);
 
 export const replyticket = (userId: string, formeData: any) =>
   axios.post(`/user/reply?id=${userId}`, formeData);
+
+export const getFiles = ({
+  type,
+  id,
+}: {
+  id: string;
+  type: "ticketid" | "replyid";
+}) => {
+  if (type === "replyid") {
+    return axios.get(`/user/files?replyid=${id}`);
+  }
+  return axios.get(`/user/files?ticketid=${id}`);
+};

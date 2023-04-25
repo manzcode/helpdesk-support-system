@@ -1,9 +1,6 @@
-import { useEffect, useState } from "react";
-import SupportTicket from "./components/SupportTicket";
-import SupportTicketList from "./components/ListTicket";
-import { Container } from "react-bootstrap";
-import Ticket from "./components/Ticket";
-import CustomNavbar from "./components/NavBar";
+import { useEffect } from "react";
+import ListTicket from "./components/ListTicket";
+import { Col, Container, Row } from "react-bootstrap";
 import {
   BrowserRouter as Router,
   Routes,
@@ -16,6 +13,8 @@ import { jwtFuncDecode, useAuth } from "./context/AuthContext";
 import Footer from "./components/Footer";
 import { useUser } from "./context/UserContext";
 import { getUser } from "./api";
+import SideBarNav from "./components/SideBarNav";
+import { PopUpProvider } from "./context/PopUpcontext";
 
 const ProtectedRoutes = ({
   condition,
@@ -52,31 +51,42 @@ function App() {
 
   return (
     <Router>
-      <CustomNavbar />
-      <Container className="h-100">
-        <Routes>
-          <Route
-            element={
-              <ProtectedRoutes
-                condition={!authenticated}
-                redirection="/lists"
-              />
-            }
-          >
-            <Route path="/" element={<Log />} />
-          </Route>
-          <Route
-            element={
-              <ProtectedRoutes condition={authenticated} redirection="/" />
-            }
-          >
-            <Route path="/create" element={<SupportTicket />} />
-            <Route path="/lists" element={<SupportTicketList />} />
-            <Route path="/ticket/:id" element={<Ticket />} />
-          </Route>
-        </Routes>
-      </Container>
-      <Footer />
+      <Row className="h-100">
+        {authenticated ? (
+          <Col md={2} className="border-end d-md-flex d-none">
+            <SideBarNav />
+          </Col>
+        ) : null}
+
+        <Col md={10}>
+          <Container className="h-100">
+            <PopUpProvider>
+              <Routes>
+                <Route
+                  element={
+                    <ProtectedRoutes
+                      condition={!authenticated}
+                      redirection="/lists"
+                    />
+                  }
+                >
+                  <Route path="/" element={<Log />} />
+                </Route>
+                <Route
+                  element={
+                    <ProtectedRoutes
+                      condition={authenticated}
+                      redirection="/"
+                    />
+                  }
+                >
+                  <Route path="/lists" element={<ListTicket />} />
+                </Route>
+              </Routes>
+            </PopUpProvider>
+          </Container>
+        </Col>
+      </Row>
     </Router>
   );
 }
