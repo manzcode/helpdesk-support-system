@@ -6,11 +6,8 @@
 <a href="https://helpdesk-ticket.onrender.com/">help desk </a>
 </br>
 
-![Capture d’écran de 2023-03-25 22-53-39](https://user-images.githubusercontent.com/47226716/227738806-feb81bd9-9f1b-4497-847e-a56a77e20df1.png)
+![Capture d’écran de 2023-04-25 21-07-44](https://user-images.githubusercontent.com/47226716/234364890-2f58dd0d-2a2d-4742-a391-c8f8ccab072a.png)
 
-![Capture d’écran de 2023-03-25 22-53-29](https://user-images.githubusercontent.com/47226716/227738817-4fe89a69-ba61-462c-876c-729d06838b6b.png)
-
-![Capture d’écran de 2023-03-25 22-53-12](https://user-images.githubusercontent.com/47226716/227738827-92252255-d328-4511-9117-b8e196bfcf59.png)
 
 <h2>Functionality</h2>
 
@@ -90,10 +87,12 @@ Go to the server directory
 ```bash
   cd server
   npm install
-  docker-compose up -d 
-  npx prisma migrate deploy
-  npm start
+  npm run dokcer:db
+  npm run studio:prisma
+  npm run start
 ```
+
+Appliquer les migration et les seeds en utilisant prisma.
 
 ### Contributor
 
