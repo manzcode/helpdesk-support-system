@@ -58,7 +58,28 @@ export const ticketPostController = async (req: Request, res: Response) => {
     );
     await Promise.all(fileUploadPromises);
 
-    return res.status(201).json({ ticketId: prismaQueryTicket?.id });
+    const newTicket = await prisma.ticket.findUnique({
+      where: {
+        id: prismaQueryTicket?.id,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            role: true,
+            username: true,
+          },
+        },
+        _count: {
+          select: {
+            files: true,
+            replies: true,
+          },
+        },
+      },
+    });
+
+    return res.status(201).json(newTicket);
   } catch (error) {
     // Delete uploaded files and their corresponding data in Supabase if an error occurs
     const fileDeletePromises = filesId.map(async (file) => {
@@ -88,10 +109,6 @@ export const replyPostController = async (req: Request, res: Response) => {
         assigned: id as string,
         ticketId: ticketId,
       },
-      include: {
-        files: true,
-        assignation: true,
-      },
     });
 
     // Upload files to Cloudinary and insert file data into Supabase in parallel using Promise.all
@@ -115,7 +132,26 @@ export const replyPostController = async (req: Request, res: Response) => {
       }
     );
     await Promise.all(fileUploadPromises);
-    return res.status(201).json(prismaQueryReplies);
+    const newReply = await prisma.replies.findUnique({
+      where: {
+        id: prismaQueryReplies.id,
+      },
+      include: {
+        _count: {
+          select: {
+            files: true,
+          },
+        },
+        assignation: {
+          select: {
+            id: true,
+            role: true,
+            username: true,
+          },
+        },
+      },
+    });
+    return res.status(201).json(newReply);
   } catch (error) {
     // Delete uploaded files and their corresponding data in Supabase if an error occurs
     const fileDeletePromises = filesId.map(async (file) => {
@@ -138,6 +174,12 @@ export const getAllTicketController = async (req: Request, res: Response) => {
       orderBy: { created_at: "desc" },
       include: {
         user: true,
+        _count: {
+          select: {
+            files: true,
+            replies: true,
+          },
+        },
       },
       take: 10,
     });
@@ -155,6 +197,14 @@ export const getAnUserTicketController = async (
   try {
     const tickets = await prisma.ticket.findMany({
       where: { userId: id as string },
+      include: {
+        _count: {
+          select: {
+            files: true,
+            replies: true,
+          },
+        },
+      },
       orderBy: { created_at: "desc" },
       take: 10,
     });
@@ -184,32 +234,67 @@ export const closeticket = async (req: Request, res: Response) => {
   }
 };
 
-export const viewATicket = async (req: Request, res: Response) => {
+export const viewReplyTicket = async (req: Request, res: Response) => {
   try {
-    const { id } = req.query;
-
-    const ticketFiles = await prisma.ticket.findUnique({
-      where: { id: id as string },
-      include: {
-        files: true,
-        user: true,
-      },
-    });
+    const { ticketid } = req.query;
 
     const ticketReply = await prisma.replies.findMany({
-      where: { ticketId: id as string },
+      where: { ticketId: ticketid as string },
       include: {
-        files: true,
+        _count: {
+          select: {
+            files: true,
+          },
+        },
         assignation: true,
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: "asc" },
       take: 10,
     });
-    return res.status(200).json({
-      ticketFiles,
-      ticketReply,
-    });
+    return res.status(200).json(ticketReply);
   } catch (error) {
+    return res.status(500).json({ message: "Server Error" });
+  }
+};
+
+export const getFiles = async (req: Request, res: Response) => {
+  const { ticketid, replyid } = req.query;
+  try {
+    const ticketFiles = await prisma.ticket.findMany({
+      where: {
+        id: ticketid as string,
+      },
+      select: {
+        id: true,
+        files: {
+          select: {
+            id: true,
+            url: true,
+          },
+        },
+      },
+    });
+    const replyFiles = await prisma.replies.findMany({
+      where: {
+        id: replyid as string,
+      },
+      select: {
+        id: true,
+        files: {
+          select: {
+            id: true,
+            url: true,
+          },
+        },
+      },
+    });
+
+    if (ticketid !== undefined) {
+      return res.status(200).json(ticketFiles);
+    }
+    return res.status(200).json(replyFiles);
+  } catch (error) {
+    console.log(error);
     return res.status(500).json({ message: "Server Error" });
   }
 };

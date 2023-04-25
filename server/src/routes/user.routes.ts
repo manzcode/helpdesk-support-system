@@ -5,7 +5,8 @@ import {
   getAnUserTicketController,
   replyPostController,
   ticketPostController,
-  viewATicket,
+  viewReplyTicket,
+  getFiles,
 } from "../controller/user.controller";
 import { middlewareMulter } from "../middleware/multer";
 
@@ -18,7 +19,9 @@ router.get("/all/tickets", getAllTicketController);
 
 router.get("/a/ticket", getAnUserTicketController);
 
-router.get("/show/ticket", viewATicket);
+router.get("/a/reply", viewReplyTicket);
+
+router.get("/files", getFiles);
 
 //post a ticket
 router.post(

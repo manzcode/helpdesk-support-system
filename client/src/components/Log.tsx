@@ -1,9 +1,12 @@
-import React, { useState } from "react";
-import { Form, Button, Alert } from "react-bootstrap";
+import React, { FunctionComponent, useState } from "react";
+import { Form, Button, Alert, InputGroup } from "react-bootstrap";
 import { auth } from "../api";
-import { AxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import Footer from "./Footer";
+import { BsEye, BsEyeSlash } from "react-icons/bs";
+import { RiShieldKeyholeLine } from "react-icons/ri";
+import { AxiosError } from "axios";
 
 interface RegistrationFormData {
   email: string;
@@ -12,14 +15,15 @@ interface RegistrationFormData {
   role: string;
 }
 
-const Log: React.FC = () => {
+const Log: FunctionComponent = () => {
   const [formData, setFormData] = useState<RegistrationFormData>({
     email: "",
     password: "",
     username: "",
     role: "user",
   });
-  const [error, setError] = useState(false);
+  const [newError, setnewError] = useState("");
+  const [psTotxt, setPsTotxt] = useState(false);
   const [login, setLogin] = useState<boolean>(true);
   const navigate = useNavigate();
   const { authenticated, setAuthenticated } = useAuth();
@@ -34,7 +38,11 @@ const Log: React.FC = () => {
       setAuthenticated(true);
       navigate("/lists");
     } catch (error) {
-      setError(true);
+      const newerror = error as AxiosError;
+      if (newerror.response) {
+        const responseData = newerror.response.data as { message: string }; // Utilisation d'une assertion de type pour indiquer que newerror.response.data est de type { message: string }
+        setnewError(responseData.message);
+      }
     }
   };
 
@@ -44,11 +52,14 @@ const Log: React.FC = () => {
   };
 
   return (
-    <div className="col-6 mx-auto">
-      <h1> Auth </h1>
+    <div className="col-md-6 mx-auto">
+      <h1>
+        {" "}
+        Helpdesk <RiShieldKeyholeLine />{" "}
+      </h1>
 
-      <Alert show={error} variant="danger">
-        Vérifier vos identification
+      <Alert show={newError !== "" ? true : false} variant="danger">
+        {newError}
       </Alert>
       <Form onSubmit={handleSubmit}>
         <Form.Group controlId="email">
@@ -64,13 +75,36 @@ const Log: React.FC = () => {
 
         <Form.Group controlId="password">
           <Form.Label>Mot de passe</Form.Label>
-          <Form.Control
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-          />
+          <InputGroup className="mb-3">
+            <Form.Control
+              className="border-end-0"
+              type={psTotxt ? "texte" : "password"}
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+            />
+            <InputGroup.Text
+              className="bg-white border-start-0"
+              id="basic-addon2"
+            >
+              {psTotxt ? (
+                <BsEyeSlash
+                  size={20}
+                  onClick={() => {
+                    setPsTotxt((p) => !p);
+                  }}
+                />
+              ) : (
+                <BsEye
+                  size={20}
+                  onClick={() => {
+                    setPsTotxt((p) => !p);
+                  }}
+                />
+              )}
+            </InputGroup.Text>
+          </InputGroup>
         </Form.Group>
 
         {!login ? (
@@ -118,6 +152,7 @@ const Log: React.FC = () => {
           {login ? "connexion" : "S'inscrire"}
         </Button>
       </Form>
+      <Footer />
     </div>
   );
 };

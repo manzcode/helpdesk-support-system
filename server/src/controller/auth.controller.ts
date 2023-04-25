@@ -19,7 +19,7 @@ export const signInController = async (req: Request, res: Response) => {
     });
     if (!checkUser)
       return res
-        .status(404)
+        .status(400)
         .json({ message: "Verifier l'email ou le mot de passe" });
 
     const token = createToken(checkUser);
@@ -34,7 +34,17 @@ export const signUpController = async (req: Request, res: Response) => {
   try {
     const { email, password, username, role } = req.body;
 
-    const checkUser = await prisma.user.create({
+    const checkUser = await prisma.user.findFirst({
+      where: {
+        email,
+      },
+    });
+
+    if (checkUser) {
+      return res.status(401).json({ message: "User already exist!" });
+    }
+
+    const createUser = await prisma.user.create({
       data: {
         email,
         password,
@@ -46,7 +56,7 @@ export const signUpController = async (req: Request, res: Response) => {
       },
     });
 
-    const token = createToken(checkUser);
+    const token = createToken(createUser);
 
     return res.status(200).json({
       message: "successfully registered",

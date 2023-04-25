@@ -5,12 +5,15 @@ import App from "./App";
 import "./index.css";
 import { AuthProvider } from "./context/AuthContext";
 import { UserProvider } from "./context/UserContext";
+import { TicketsProvider } from "./context/TicketsContext";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <AuthProvider>
       <UserProvider>
-        <App />
+        <TicketsProvider>
+          <App />
+        </TicketsProvider>
       </UserProvider>
     </AuthProvider>
   </React.StrictMode>
