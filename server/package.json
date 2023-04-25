@@ -4,11 +4,11 @@
   "main": "src/server.ts",
   "author": "mario mans",
   "scripts": {
-    "start": "ts-node-dev --respawn --transpile-only --exec 'npm run lint && npm run format && node' src/server.ts",
+    "prestart": "npm run lint",
+    "start": "ts-node-dev --respawn --transpile-only src/server.ts",
     "docker:db": "docker-compose up -d",
     "studio:prisma": "npx prisma studio",
-    "lint": "eslint --fix .",
-    "format": "prettier --write .",
+    "lint": "eslint --fix 'src/**/*.ts'",
     "build": "tsc",
     "test": "jest"
   },

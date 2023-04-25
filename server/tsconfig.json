@@ -5,6 +5,7 @@
         ],
         "module": "CommonJS",
         "target": "ES2017",
+        "isolatedModules": true,
         "esModuleInterop": true,
         "moduleResolution": "node",
         "sourceMap": true,
